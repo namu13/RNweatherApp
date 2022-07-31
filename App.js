@@ -14,7 +14,8 @@ import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { theme } from "./colors";
 
-const STORAGE_KEY = "@toDos";
+const TODO_STORAGE_KEY = "@toDos";
+const WORKING_STORAGE_KEY = "@working";
 
 export default function App() {
   const [working, setWorking] = useState(true);
@@ -23,19 +24,35 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    loadWorking();
     loadToDos();
   }, []);
 
-  const travel = () => setWorking(false);
-  const work = () => setWorking(true);
+  const travel = async () => {
+    setWorking(false);
+    saveWorking(false);
+  };
+  const work = async () => {
+    setWorking(true);
+    saveWorking(true);
+  };
+
+  const saveWorking = async (working) => {
+    await AsyncStorage.setItem(WORKING_STORAGE_KEY, JSON.stringify(working));
+  };
+
+  const loadWorking = async () => {
+    const working = await AsyncStorage.getItem(WORKING_STORAGE_KEY);
+    setWorking(JSON.parse(working));
+  };
 
   const onChangeText = (payload) => setText(payload);
 
   const saveToDos = async (toSave) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    await AsyncStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(toSave));
   };
   const loadToDos = async () => {
-    const s = await AsyncStorage.getItem(STORAGE_KEY);
+    const s = await AsyncStorage.getItem(TODO_STORAGE_KEY);
     await setTimeout(() => {
       setLoading(false);
     }, 1000);
@@ -91,7 +108,7 @@ export default function App() {
           onChangeText={onChangeText}
           returnKeyType="done"
           autoCapitalize="none"
-          autoCorrect="false"
+          autoCorrect={false}
           value={text}
           placeholder={working ? "Add a To Do" : "Where do you want to go?"}
           style={styles.input}
