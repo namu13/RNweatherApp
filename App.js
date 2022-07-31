@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { theme } from "./colors";
 
@@ -35,6 +35,13 @@ export default function App() {
   const work = async () => {
     setWorking(true);
     saveWorking(true);
+  };
+
+  const changeComplecity = async (key) => {
+    const newToDos = { ...toDos };
+    newToDos[key].complete = !newToDos[key].complete;
+    setToDos(newToDos);
+    await saveToDos(newToDos);
   };
 
   const saveWorking = async (working) => {
@@ -63,7 +70,10 @@ export default function App() {
     if (text === "") {
       return;
     }
-    const newToDos = { ...toDos, [Date.now()]: { text, working } };
+    const newToDos = {
+      ...toDos,
+      [Date.now()]: { text, working, complete: false },
+    };
     setToDos(newToDos);
     await saveToDos(newToDos);
     setText("");
@@ -123,10 +133,43 @@ export default function App() {
           {Object.keys(toDos).map((key) =>
             toDos[key].working === working ? (
               <View style={styles.toDo} key={key}>
-                <Text style={styles.toDoText}>{toDos[key].text}</Text>
-                <TouchableOpacity onPress={() => deleteToDo(key)}>
-                  <Feather name="trash-2" size={24} color="white" />
+                <TouchableOpacity onPress={() => changeComplecity(key)}>
+                  {toDos[key].complete ? (
+                    <MaterialCommunityIcons
+                      name="checkbox-marked"
+                      size={24}
+                      color="white"
+                    />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="checkbox-blank"
+                      size={24}
+                      color="white"
+                    />
+                  )}
                 </TouchableOpacity>
+                <View style={styles.toDoContainer}>
+                  {toDos[key].complete ? (
+                    <Text
+                      style={{
+                        ...styles.toDoText,
+                        color: theme.textGray,
+                        textDecorationLine: "line-through",
+                      }}
+                    >
+                      {toDos[key].text}
+                    </Text>
+                  ) : (
+                    <Text style={styles.toDoText}>{toDos[key].text}</Text>
+                  )}
+                  <TouchableOpacity onPress={() => deleteToDo(key)}>
+                    <MaterialCommunityIcons
+                      name="trash-can-outline"
+                      size={24}
+                      color="white"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
             ) : null
           )}
@@ -161,12 +204,17 @@ const styles = StyleSheet.create({
   },
   toDo: {
     flexDirection: "row",
-    justifyContent: "space-between",
     backgroundColor: theme.grey,
     paddingVertical: 20,
     paddingHorizontal: 20,
     marginBottom: 10,
     borderRadius: 10,
+  },
+  toDoContainer: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginLeft: 10,
   },
   toDoText: {
     color: "white",
